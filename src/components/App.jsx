@@ -16,49 +16,48 @@ import React, { useEffect, useState } from 'react'
 function App() {
 
   const [data, setData] = useState([])
-  const [filter, setFilter] = useState()
+  const [filter, setFilter] = useState([])
+  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [completedFilter, setCompletedFilter] = useState('all')
 
 
   useEffect(() => {
       async function newData() {
           const res = await getData()
           setData(res)
-          setFilter(res)          
       }
       newData()
   }, [])
+  
+  
+  
 
-  function fiterData(type, value = 'all') {
-      let filtered = data
-
-      if(type === 'priority') {
-        filtered = data.filter(item => item.priority === value)
-      }
-      if(type === 'completed') {
-
-        filtered = filtered.filter(item => item.priority === value)
-      }
-
-      setFilter(filtered)
-  }
-
-  useEffect(() => {
+    useEffect(() => {
+      let filtered = [...data]
     
-  })
+      if (priorityFilter !== 'all') {
+        filtered = filtered.filter(item => item.priority === priorityFilter)
+      }
+    
+      if (completedFilter !== 'all') {
+        filtered = filtered.filter(item => item.completed === (completedFilter === 'Bajarilgan'))
+      }
+    
+      setFilter(filtered)
 
-  function handlePriority(value) {
-    if(value === 'all') {
-      setFilter(data)
-    } else {
-      fiterData('priority',value )
+    }, [priorityFilter, completedFilter, data])
+    
+
+    function handlePriority(value) {
+      setPriorityFilter(value)
     }
-  }
-  function handleCompleted(value) {
-      // fiterData('completed', value)
-      console.log(value);
-      
-  }
-
+    
+    function handleCompleted(value) {
+      setCompletedFilter(value)
+    }
+    
+    console.log(filter);
+    
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -83,8 +82,8 @@ function App() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">all</SelectItem>
-              <SelectItem value={true}>Bajarilgan</SelectItem>
-              <SelectItem value={false}>bajarilmagan</SelectItem>
+              <SelectItem value='Bajarilgan'>Bajarilgan</SelectItem>
+              <SelectItem value='bajarilmagan'>bajarilmagan</SelectItem>
             </SelectContent>
           </Select>
           
