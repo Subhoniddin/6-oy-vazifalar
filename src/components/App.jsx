@@ -6,20 +6,31 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "./ui/select"
 import TodoList from "./todo-list"
 import getData from '../requests'
 import React, { useEffect, useState } from 'react'
+import { DialogDemo } from "./modal"
 
 
 
 function App() {
-
   const [data, setData] = useState([])
   const [filter, setFilter] = useState([])
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [completedFilter, setCompletedFilter] = useState('all')
 
+  function postData(postD) {
+      fetch('https://json-api.uz/api/project/fn37/todos', {
+        method: 'POST',
+        headers: {'Content-type': 'application/json'},
+        body: JSON.stringify(postD)
+      }).then(res => res.json()).then(data => {console.log(data);
+      }).catch(err => {
+        console.log(err.message);
+        
+      })
+  }
 
   useEffect(() => {
       async function newData() {
@@ -56,9 +67,6 @@ function App() {
       setCompletedFilter(value)
     }
     
-    console.log(filter);
-    
-
   return (
     <div className="max-w-5xl mx-auto">
       
@@ -87,11 +95,13 @@ function App() {
             </SelectContent>
           </Select>
           
-          <Button>Qo'shish</Button>
+          <DialogDemo postData={postData}/>
 
         </div>
         <div className="" ><ModeToggle/></div>
      </div>
+
+     
 
       <div className="max-w-3xl mx-auto">
         <TodoList newData={filter}/>
