@@ -1,5 +1,5 @@
-async function getData(id = '') {
-    const req = await fetch(`https://json-api.uz/api/project/fn37/todos${id}`)
+async function getData(skip, limit) {
+    const req = await fetch(`https://json-api.uz/api/project/fn37/todos?skip=${skip}&limit=${limit}`)
     
     if (req.status === 200) {
         const res = await req.json()

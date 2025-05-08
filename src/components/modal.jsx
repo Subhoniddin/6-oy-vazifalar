@@ -32,6 +32,7 @@ export function DialogDemo({postData}) {
       priority: formData.get("priority"),
       completed: formData.get("completed") === "on",
     };
+    if(data.title == '')  return alert("Titleni toldiring!")
     postData(data)
     e.target.reset();
     setOpen(false);

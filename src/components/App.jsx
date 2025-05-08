@@ -12,33 +12,37 @@ import getData from '../requests'
 import React, { useEffect, useState } from 'react'
 import { DialogDemo } from "./modal"
 
-
-
 function App() {
   const [data, setData] = useState([])
   const [filter, setFilter] = useState([])
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [completedFilter, setCompletedFilter] = useState('all')
+  const [skip, setskip] = useState(0)
+
+  function handleMoreList() {
+    setskip(prev => prev + 10)
+    console.log(skip);
+  }
 
   function postData(postD) {
       fetch('https://json-api.uz/api/project/fn37/todos', {
         method: 'POST',
         headers: {'Content-type': 'application/json'},
         body: JSON.stringify(postD)
-      }).then(res => res.json()).then(data => {console.log(data);
-      }).catch(err => {
+      }).then(req => req.json()).then(res => {
+          setData(prev => [...prev, res])
+       }).catch(err => {
         console.log(err.message);
-        
       })
   }
 
   useEffect(() => {
       async function newData() {
-          const res = await getData()
-          setData(res)
+          const res = await getData(skip, 10)
+          setData(prev => [...prev, ...res])
       }
       newData()
-  }, [])
+  }, [skip])
   
   
   
@@ -58,6 +62,17 @@ function App() {
 
     }, [priorityFilter, completedFilter, data])
     
+    function deleteList(id) {
+      fetch(`https://json-api.uz/api/project/fn37/todos/${id}`, {
+        method: 'DELETE',
+      }).then(res => res.text()).then(data => {console.log(data);
+      }).catch(err => {
+        console.log(err.message);
+      })
+
+      setData(prev => prev.filter(item => item.id !== id))
+
+    }
 
     function handlePriority(value) {
       setPriorityFilter(value)
@@ -97,14 +112,14 @@ function App() {
           
           <DialogDemo postData={postData}/>
 
-        </div>
-        <div className="" ><ModeToggle/></div>
+      </div>
+      <div className="" ><ModeToggle/></div>
      </div>
 
      
 
       <div className="max-w-3xl mx-auto">
-        <TodoList newData={filter}/>
+        <TodoList newData={filter} deleteList={deleteList} handleMoreList={handleMoreList}/>
       </div>
 
     </div>
