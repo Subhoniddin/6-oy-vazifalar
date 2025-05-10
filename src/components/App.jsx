@@ -12,6 +12,7 @@ import { DialogDemo } from "./modal"
 
 import { useReducer } from "react"
 import { getData, postData, deleteList } from '../requests'
+import { Toaster, toast } from 'sonner';
 
 const initialValue = {
   data: [],
@@ -48,16 +49,22 @@ function App() {
   const [state, dispatch] = useReducer(reducer, initialValue)
   
   function deleteItem(id) {
-    deleteList(id).then(res => {
-    dispatch({type: 'SET_FILTER', payload: state.data.filter((el)=> el.id !== id)})
+      deleteList(id).then(res => {
+      dispatch({type: 'SET_FILTER', payload: state.data.filter((el)=> el.id !== id)})
+      if(id) {
+        toast.success("Muvaffaqiyatli o'chirildi")
+      }
     }).catch((err) => {
-
-    }).finally(() => {})
+        toast.error(err.message)
+    }).finally(() => {
+      
+    })
   }
 
   function newPostData(data) {
     postData(data).then(res => {
         dispatch({type: 'SET_DATA', payload: [res]})
+        toast.success('Malumot qoshildi')
     })
   }
 
@@ -74,9 +81,10 @@ function App() {
               dispatch({type:'SET_DATA', payload: res.data})
               if(!res.total) {
                 dispatch({type: 'haveData'})
+                toast.info('malumot tugadi')
               }
           }).catch((err)=> {
-
+              toast.error(err.message)
           }).finally(() =>  dispatch({type:'loading'}))
       }
       newData()
@@ -98,7 +106,6 @@ function App() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      
      <div className="flex items-end">
       <div className="grow flex justify-between items-center p-5 mt-4 rounded-lg bg-gray-100 dark:bg-gray-900">
           <div className="text-3xl font-bold font-sans">Todo app</div>
@@ -133,7 +140,7 @@ function App() {
       <div className="max-w-3xl mx-auto">
         <TodoList loading={state.loading} newData={state.filter} deleteItem={deleteItem} handleMoreList={handleMoreList} haveData={state.haveData}/>
       </div>
-
+       <Toaster position="top-center"/>
     </div>
   )
 }
