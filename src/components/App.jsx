@@ -20,6 +20,7 @@ const initialValue = {
   completedFilter: 'all',
   skip: 0,
   haveData: true,
+  loading: false,
 }
 
 const reducer = (state, {type, payload}) => {
@@ -36,6 +37,8 @@ const reducer = (state, {type, payload}) => {
           return {...state, skip: payload}
       case 'haveData':
           return {...state, haveData: false}
+      case 'loading':
+          return {...state, loading: !state.loading}
       default:
         return state
     }
@@ -45,15 +48,15 @@ function App() {
   const [state, dispatch] = useReducer(reducer, initialValue)
   
   function deleteItem(id) {
-   deleteList(id).then(res => {
-   dispatch({type: 'SET_FILTER', payload: state.data.filter((el)=> el.id !== id)})
-   })
+    deleteList(id).then(res => {
+    dispatch({type: 'SET_FILTER', payload: state.data.filter((el)=> el.id !== id)})
+    }).catch((err) => {
+
+    }).finally(() => {})
   }
 
   function newPostData(data) {
     postData(data).then(res => {
-      console.log([res]);
-      
         dispatch({type: 'SET_DATA', payload: [res]})
     })
   }
@@ -65,12 +68,16 @@ function App() {
   }
 
   useEffect(() => {
-      async function newData() {
-          const res = await getData(state.skip, 10)
-          dispatch({type:'SET_DATA', payload: res.data})
-          if(!res.total) {
-            dispatch({type: 'haveData'})
-          }
+      function newData() {
+          dispatch({type:'loading'})
+          getData(state.skip, 10).then(res => {
+              dispatch({type:'SET_DATA', payload: res.data})
+              if(!res.total) {
+                dispatch({type: 'haveData'})
+              }
+          }).catch((err)=> {
+
+          }).finally(() =>  dispatch({type:'loading'}))
       }
       newData()
   }, [state.skip])
@@ -124,7 +131,7 @@ function App() {
      </div>
 
       <div className="max-w-3xl mx-auto">
-        <TodoList newData={state.filter} deleteItem={deleteItem} handleMoreList={handleMoreList} haveData={state.haveData}/>
+        <TodoList loading={state.loading} newData={state.filter} deleteItem={deleteItem} handleMoreList={handleMoreList} haveData={state.haveData}/>
       </div>
 
     </div>
