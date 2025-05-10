@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import { ModeToggle } from "./ModeToggle"
 import {
   Select,
@@ -8,87 +7,95 @@ import {
   SelectValue,
 } from "./ui/select"
 import TodoList from "./todo-list"
-import getData from '../requests'
-import React, { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { DialogDemo } from "./modal"
 
-function App() {
-  const [data, setData] = useState([])
-  const [filter, setFilter] = useState([])
-  const [priorityFilter, setPriorityFilter] = useState('all')
-  const [completedFilter, setCompletedFilter] = useState('all')
-  const [skip, setskip] = useState(0)
+import { useReducer } from "react"
+import { getData, postData, deleteList } from '../requests'
 
-  function handleMoreList() {
-    setskip(prev => prev + 10)
-    console.log(skip);
+const initialValue = {
+  data: [],
+  filter: [],
+  priorityFilter: 'all',
+  completedFilter: 'all',
+  skip: 0,
+  haveData: true,
+}
+
+const reducer = (state, {type, payload}) => {
+    switch (type) {
+      case 'SET_DATA':
+          return {...state, data: [...state.data, ...payload]}
+      case 'SET_FILTER':
+          return {...state, filter: payload}
+      case 'priority_Filter':
+          return {...state, priorityFilter: payload}
+      case 'completed_Filter':
+          return {...state, completedFilter: payload}
+      case 'SKIP':
+          return {...state, skip: payload}
+      case 'haveData':
+          return {...state, haveData: false}
+      default:
+        return state
+    }
+} 
+
+function App() {
+  const [state, dispatch] = useReducer(reducer, initialValue)
+  
+  function deleteItem(id) {
+   deleteList(id).then(res => {
+   dispatch({type: 'SET_FILTER', payload: state.data.filter((el)=> el.id !== id)})
+   })
   }
 
-  function postData(postD) {
-      fetch('https://json-api.uz/api/project/fn37/todos', {
-        method: 'POST',
-        headers: {'Content-type': 'application/json'},
-        body: JSON.stringify(postD)
-      }).then(req => req.json()).then(res => {
-          setData(prev => [...prev, res])
-       }).catch(err => {
-        console.log(err.message);
-      })
+  function newPostData(data) {
+    postData(data).then(res => {
+      console.log([res]);
+      
+        dispatch({type: 'SET_DATA', payload: [res]})
+    })
+  }
+
+  function handleMoreList() {
+    if(state.haveData) {
+      dispatch({type:'SKIP', payload: state.skip + 10})
+    }
   }
 
   useEffect(() => {
       async function newData() {
-          const res = await getData(skip, 10)
-          setData(prev => [...prev, ...res])
+          const res = await getData(state.skip, 10)
+          dispatch({type:'SET_DATA', payload: res.data})
+          if(!res.total) {
+            dispatch({type: 'haveData'})
+          }
       }
       newData()
-  }, [skip])
-  
-  
-  
-
+  }, [state.skip])
     useEffect(() => {
-      let filtered = [...data]
+      let filtered = [...state.data]
     
-      if (priorityFilter !== 'all') {
-        filtered = filtered.filter(item => item.priority === priorityFilter)
+      if (state.priorityFilter !== 'all') {
+        filtered = filtered.filter(item => item.priority === state.priorityFilter)
       }
     
-      if (completedFilter !== 'all') {
-        filtered = filtered.filter(item => item.completed === (completedFilter === 'Bajarilgan'))
+      if (state.completedFilter !== 'all') {
+        filtered = filtered.filter(item => item.completed === (state.completedFilter === 'Bajarilgan'))
       }
-    
-      setFilter(filtered)
+      
+      dispatch({type:'SET_FILTER', payload: filtered})
 
-    }, [priorityFilter, completedFilter, data])
-    
-    function deleteList(id) {
-      fetch(`https://json-api.uz/api/project/fn37/todos/${id}`, {
-        method: 'DELETE',
-      }).then(res => res.text()).then(data => {console.log(data);
-      }).catch(err => {
-        console.log(err.message);
-      })
+    }, [state.priorityFilter, state.completedFilter, state.data])
 
-      setData(prev => prev.filter(item => item.id !== id))
-
-    }
-
-    function handlePriority(value) {
-      setPriorityFilter(value)
-    }
-    
-    function handleCompleted(value) {
-      setCompletedFilter(value)
-    }
-    
   return (
     <div className="max-w-5xl mx-auto">
       
      <div className="flex items-end">
       <div className="grow flex justify-between items-center p-5 mt-4 rounded-lg bg-gray-100 dark:bg-gray-900">
           <div className="text-3xl font-bold font-sans">Todo app</div>
-          <Select onValueChange={handlePriority}>
+          <Select onValueChange={(val)=>dispatch({type: 'priority_Filter', payload: val})}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="priority"/>
             </SelectTrigger>
@@ -99,7 +106,7 @@ function App() {
               <SelectItem value="high">high</SelectItem>
             </SelectContent>
           </Select>
-          <Select onValueChange={handleCompleted}>
+          <Select onValueChange={(val)=>dispatch({type: 'completed_Filter', payload: val})}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="completed" />
             </SelectTrigger>
@@ -110,16 +117,14 @@ function App() {
             </SelectContent>
           </Select>
           
-          <DialogDemo postData={postData}/>
+          <DialogDemo newPostData={newPostData}/>
 
       </div>
-      <div className="" ><ModeToggle/></div>
+      <div className="ml-6" ><ModeToggle/></div>
      </div>
 
-     
-
       <div className="max-w-3xl mx-auto">
-        <TodoList newData={filter} deleteList={deleteList} handleMoreList={handleMoreList}/>
+        <TodoList newData={state.filter} deleteItem={deleteItem} handleMoreList={handleMoreList} haveData={state.haveData}/>
       </div>
 
     </div>

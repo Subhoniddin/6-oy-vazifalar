@@ -20,7 +20,7 @@ import {
 } from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
 
-export function DialogDemo({postData}) {
+export function DialogDemo({newPostData}) {
   const [open, setOpen] = useState(false);
   
 
@@ -33,7 +33,7 @@ export function DialogDemo({postData}) {
       completed: formData.get("completed") === "on",
     };
     if(data.title == '')  return alert("Titleni toldiring!")
-    postData(data)
+    newPostData(data)
     e.target.reset();
     setOpen(false);
   };
